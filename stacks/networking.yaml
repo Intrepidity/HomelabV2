@@ -1,0 +1,58 @@
+services:
+  pihole:
+    container_name: pihole
+    image: pihole/pihole:latest
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+    environment:
+      TZ: ${TZ}
+      FTLCONF_webserver_api_password: ${CONFIG_PIHOLE_PASSWORD}
+    volumes:
+      - pihole_data:/etc/pihole
+    networks:
+      - traefik
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.pihole.rule=Host(`pihole.${DOMAIN}`)"
+      - "traefik.http.routers.pihole.entrypoints=web"
+      - "traefik.http.routers.pihole.tls=true"
+      - "traefik.http.services.pihole.loadbalancer.server.port=8082"
+
+  traefik:
+    image: traefik:latest
+    container_name: traefik
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8083:8080"
+      - "8084:8084"
+    environment:
+      - TZ=${TZ}
+      - TRANSIP_ACCOUNT_NAME=${TRANSIP_USERNAME}
+      - TRANSIP_PRIVATE_KEY_PATH=/transip.key
+    networks:
+      - traefik
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik/acme.json:/acme.json
+      - ./traefik/transip.key:/transip.key:ro
+      - ./traefik/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./traefik/dynamic:/etc/traefik/dynamic
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik.rule=Host(`traefik.${DOMAIN}`)"
+      - "traefik.http.routers.traefik.entrypoints=web"
+      - "traefik.http.routers.traefik.tls=true"
+      - "traefik.http.routers.traefik.service=api@internal"
+
+volumes:
+  pihole_data:
+
+networks:
+  traefik:
+    external: true

@@ -1,0 +1,42 @@
+entryPoints:
+  insecure:
+    address: ":80"
+  web:
+    address: ":443"
+    http:
+      tls: {}
+  metrics:
+    address: ":8084"
+
+providers:
+  docker:
+    endpoint: "unix:///var/run/docker.sock"
+    exposedByDefault: false
+    network: traefik
+  file:
+    directory: /etc/traefik/dynamic
+    watch: true
+
+api:
+  dashboard: true
+  insecure: false
+
+certificatesResolvers:
+  le:
+    acme:
+      email: changeme@changeme.org
+      storage: /acme.json
+      dnsChallenge:
+        provider: transip
+        delayBeforeCheck: 60
+
+log:
+  format: json
+  level: INFO
+
+accessLog:
+  format: json
+
+metrics:
+  prometheus:
+    entryPoint: metrics
