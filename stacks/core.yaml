@@ -1,26 +1,26 @@
 services:
   portainer:
-  image: portainer/portainer-ce:2.33.5
-  container_name: portainer
-  ports:
-    - "8000:8000" # SSH tunnel server for external agents, can be disabled if using only local host
-  environment:
-    TZ: ${TZ}
-  volumes:
-    - /var/run/docker.sock:/var/run/docker.sock:ro
-    - portainer_data:/data
-  networks:
-    - traefik
-  restart: unless-stopped
-  labels:
-    - "traefik.enable=true"
-    - "traefik.http.routers.wildcard.tls.certresolver=le"
-    - "traefik.http.routers.wildcard.tls.domains[0].main=${DOMAIN}"
-    - "traefik.http.routers.wildcard.tls.domains[0].sans=*.${DOMAIN}"
-    - "traefik.http.routers.portainer.rule=Host(`portainer.${DOMAIN}`)"
-    - "traefik.http.routers.portainer.entrypoints=web"
-    - "traefik.http.routers.portainer.tls=true"
-    - "traefik.http.services.portainer.loadbalancer.server.port=9000"
+    image: portainer/portainer-ce:2.33.5
+    container_name: portainer
+    ports:
+      - "8000:8000" # SSH tunnel server for external agents, can be disabled if using only local host
+    environment:
+      TZ: ${TZ}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - portainer_data:/data
+    networks:
+      - traefik
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.wildcard.tls.certresolver=le"
+      - "traefik.http.routers.wildcard.tls.domains[0].main=${DOMAIN}"
+      - "traefik.http.routers.wildcard.tls.domains[0].sans=*.${DOMAIN}"
+      - "traefik.http.routers.portainer.rule=Host(`portainer.${DOMAIN}`)"
+      - "traefik.http.routers.portainer.entrypoints=web"
+      - "traefik.http.routers.portainer.tls=true"
+      - "traefik.http.services.portainer.loadbalancer.server.port=9000"
 
 volumes:
   portainer_data: 

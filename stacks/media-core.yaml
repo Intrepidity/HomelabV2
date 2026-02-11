@@ -20,7 +20,6 @@ services:
       - "traefik.http.routers.sabnzbd.tls=true"
       - "traefik.http.services.sabnzbd.loadbalancer.server.port=8080"
       
-
   transmission:
     image: lscr.io/linuxserver/transmission:4.0.5-r3-ls240
     container_name: transmission
