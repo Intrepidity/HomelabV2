@@ -1,0 +1,70 @@
+# This template helps you set up a Nginx+PHP+MySQL app. This example makes the following assumptions:
+#  - You have a docker image for your PHP app
+#  - You have a separate docker image for static assets
+#  - You have a registered domain for SSL. The example includes both a single and wildcard domain setup
+
+services:
+  app:
+    image: ghcr.io/myimage/myimage:dev
+    container_name: myapp-app
+    working_dir: /var/www/html
+    env_file:
+      - .env
+    depends_on:
+      - db
+    networks:
+      - internal
+
+  web:
+    image: ghcr.io/myimage/myimage-static:dev
+    container_name: myapp-web
+    depends_on:
+      - app
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik"
+
+      - "traefik.http.services.myapp.loadbalancer.server.port=80"
+
+      # main router
+      - "traefik.http.routers.myapp-main.rule=Host(`dev.mydomain.eu`)"
+      - "traefik.http.routers.myapp-main.entrypoints=web"
+      - "traefik.http.routers.myapp-main.tls=true"
+      - "traefik.http.routers.myapp-main.tls.domains[0].main=dev.mydomain.eu"
+      - "traefik.http.routers.myapp-main.tls.certresolver=le"
+      - "traefik.http.routers.myapp-main.service=myapp"
+
+      # wildcard router
+      - "traefik.http.routers.myapp-wild.rule=HostRegexp(`^.+\\.dev\\.mydomain\\.eu$`)"
+      - "traefik.http.routers.myapp-wild.entrypoints=web"
+      - "traefik.http.routers.myapp-wild.tls=true"
+      - "traefik.http.routers.myapp-wild.tls.domains[0].main=dev.mydomain.eu"
+      - "traefik.http.routers.myapp-wild.tls.domains[0].sans=*.dev.mydomain.eu"
+      - "traefik.http.routers.myapp-wild.tls.certresolver=le"
+      - "traefik.http.routers.myapp-wild.service=myapp"
+    networks:
+      - traefik
+      - internal
+
+  db:
+    image: mysql:8.0
+    container_name: myapp-db
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_DATABASE: mydatabase
+      MYSQL_USER: myuser
+      MYSQL_PASSWORD: mypassword
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - internal
+
+volumes:
+  db_data:
+
+networks:
+  traefik:
+    external: true
+  internal:
+    driver: bridge
