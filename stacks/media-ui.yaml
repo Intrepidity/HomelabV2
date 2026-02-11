@@ -1,0 +1,94 @@
+services:
+  homarr:
+    image: ghcr.io/homarr-labs/homarr:latest
+    container_name: homarr
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - SECRET_ENCRYPTION_KEY=${HOMARR_ENCRYPTION_KEY}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - homarr_data:/appdata
+    networks:
+      - traefik
+      - media
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.homarr.rule=Host(`home.${DOMAIN}`)"
+      - "traefik.http.routers.homarr.entrypoints=web"
+      - "traefik.http.routers.homarr.tls=true"
+      - "traefik.http.services.homarr.loadbalancer.server.port=7575"
+
+  organizr:
+    image: ghcr.io/organizr/organizr:latest
+    container_name: organizr
+    environment:
+     - PUID=${PUID}
+     - PGID=${PGID}
+     - TZ=${TZ}
+    volumes:
+     - organizr_config:/config
+    networks:
+      - traefik
+      - media
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.organizr.rule=Host(`${DOMAIN}`)"
+      - "traefik.http.routers.organizr.entrypoints=web"
+      - "traefik.http.routers.organizr.tls=true"
+      - "traefik.http.services.organizr.loadbalancer.server.port=80"
+
+  tautulli:
+    image: lscr.io/linuxserver/tautulli:latest
+    container_name: tautulli
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - tautulli_config:/config
+    networks:
+      - traefik
+      - media
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.tautulli.rule=Host(`tautulli.${DOMAIN}`)"
+      - "traefik.http.routers.tautulli.entrypoints=web"
+      - "traefik.http.routers.tautulli.tls=true"
+      - "traefik.http.services.tautulli.loadbalancer.server.port=8181"
+
+  overseerr:
+    image: lscr.io/linuxserver/overseerr:latest
+    container_name: overseerr
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - overseerr_config:/config
+    networks:
+      - traefik
+      - media
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.overseerr.rule=Host(`overseerr.${DOMAIN}`)"
+      - "traefik.http.routers.overseerr.entrypoints=web"
+      - "traefik.http.routers.overseerr.tls=true"
+      - "traefik.http.services.overseerr.loadbalancer.server.port=5055"
+
+volumes:
+  homarr_data:
+  organizr_config: 
+  tautulli_config: 
+  overseerr_config: 
+
+networks:
+  traefik:
+    external: true
+  media:
+    external: true

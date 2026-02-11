@@ -1,0 +1,58 @@
+services:
+  sabnzbd:
+    image: lscr.io/linuxserver/sabnzbd:latest
+    container_name: sabnzbd
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - sabnzbd_config:/config
+      - /data/usenet:/data/usenet
+    networks:
+      - traefik
+      - media
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.sabnzbd.rule=Host(`sabnzbd.${DOMAIN}`)"
+      - "traefik.http.routers.sabnzbd.entrypoints=web"
+      - "traefik.http.routers.sabnzbd.tls=true"
+      - "traefik.http.services.sabnzbd.loadbalancer.server.port=8080"
+      
+
+  transmission:
+    image: lscr.io/linuxserver/transmission:4.0.5-r3-ls240
+    container_name: transmission
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - USER=transmission
+      - PASS=transmission
+    volumes:
+      - transmission_config:/config
+      - /data/torrents:/data/torrents
+    ports:
+      - 51413:51413
+      - 51413:51413/udp
+    networks:
+      - traefik
+      - media
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.transmission.rule=Host(`transmission.${DOMAIN}`) && (PathPrefix(`/transmission`))"
+      - "traefik.http.routers.transmission.entrypoints=web"
+      - "traefik.http.routers.transmission.tls=true"
+      - "traefik.http.services.transmission.loadbalancer.server.port:9091"
+
+volumes:
+  sabnzbd_config:
+  transmission_config:
+
+networks:
+  traefik:
+    external: true
+  media:
+    external: true
